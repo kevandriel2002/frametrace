@@ -9,6 +9,19 @@ export default defineConfig([
   globalIgnores(['dist']),
   {
     files: ['**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['react', 'react-dom', '**/scene/**', '**/ui/**'],
+              message: 'src/core must stay pure: no React, scene or UI imports.',
+            },
+          ],
+        },
+      ],
+    },
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
