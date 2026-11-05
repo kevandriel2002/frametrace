@@ -12,7 +12,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { disposeObject } from './dispose';
 import { createWorldAxes } from './worldAxes';
 import { composePipeline } from '../core/pipeline/compose';
-import { rotate, scale, translate } from '../core/pipeline/operations';
+import type { StoreApi } from 'zustand/vanilla';
+import type { PipelineState } from '../store/pipelineStore';
 import type { Pipeline } from '../core/pipeline/types';
 import { createHouse } from './house';
 import { createLocalAxes } from './localAxes';
@@ -25,8 +26,9 @@ export class SceneViewport {
   private readonly controls: OrbitControls;
   private readonly resizeObserver: ResizeObserver;
   private readonly house: Group;
+  private readonly unsubscribe: () => void;
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, store: StoreApi<PipelineState>) {
     this.container = container;
 
     this.renderer = new WebGLRenderer({ antialias: true });
@@ -59,7 +61,10 @@ export class SceneViewport {
     this.house.add(createLocalAxes(2.2));
     this.scene.add(this.house);
 
-    this.applyPipeline([scale(1, 1.5, 1), rotate('y', 45), translate(3, 0, 0)]);
+    this.applyPipeline(store.getState().pipeline);
+    this.unsubscribe = store.subscribe((state, previous) => {
+      if (state.pipeline !== previous.pipeline) this.applyPipeline(state.pipeline);
+    });
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(container);
@@ -88,6 +93,7 @@ export class SceneViewport {
 
   dispose(): void {
     this.renderer.setAnimationLoop(null);
+    this.unsubscribe();
     this.resizeObserver.disconnect();
     this.controls.dispose();
     disposeObject(this.scene);
