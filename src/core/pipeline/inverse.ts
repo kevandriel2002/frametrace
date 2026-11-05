@@ -7,6 +7,7 @@ export type InverseResult =
   | { ok: true; matrix: Matrix4 }
   | { ok: false; reason: 'singular' };
 
+  // Inverts Final matrix
 export function invertMatrix(m: Matrix4): InverseResult {
   if (Math.abs(m.determinant()) < EPSILON) {
     return { ok: false, reason: 'singular' };
@@ -32,6 +33,7 @@ export function invertOp(op: Operation): Operation | null {
 
 const isOperation = (op: Operation | null): op is Operation => op !== null;
 
+// Builds new pipeline that undoes original
 export function invertPipeline(pipeline: Pipeline): Pipeline | null {
   const inverted = [...pipeline].reverse().map(invertOp);
   if (!inverted.every(isOperation)) return null;

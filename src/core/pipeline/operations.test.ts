@@ -6,6 +6,7 @@ import { expectPoint, transformPoint } from '../testUtils';
 import { opToMatrix, rotate, rotationMatrix, scale, translate } from './operations';
 import type { Axis } from './types';
 
+// Checks that a point is moved to where it should
 describe('translate', () => {
   it('moves a point by the offset', () => {
     const m = opToMatrix(translate(2, 3, 4));
@@ -18,6 +19,7 @@ describe('translate', () => {
   });
 });
 
+// Checks that a point is moved to where it should
 describe('scale', () => {
   it('multiplies each coordinate by its factor', () => {
     const m = opToMatrix(scale(2, 3, 4));
@@ -29,6 +31,7 @@ describe('scale', () => {
   });
 });
 
+// Test conventions
 describe('rotate: right-hand rule convention', () => {
   it('+90° about Z maps +X to +Y', () => {
     expectPoint(transformPoint(opToMatrix(rotate('z', 90)), 1, 0, 0), 0, 1, 0);
@@ -43,6 +46,7 @@ describe('rotate: right-hand rule convention', () => {
   });
 });
 
+// Checks determinant for rotation
 describe('rotate: matrix properties', () => {
   it.each<[Axis, number]>([
     ['x', 30],

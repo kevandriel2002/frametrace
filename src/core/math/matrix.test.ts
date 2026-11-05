@@ -2,6 +2,7 @@ import { Matrix4 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { cell, clean, isIdentity, matricesEqual, toRows } from './matrix';
 
+// Verifies storage convention
 describe('cell and storage order', () => {
   it('reads by (row, column) while Three.js stores column-major', () => {
     const m = new Matrix4().makeTranslation(2, 3, 4);
@@ -24,6 +25,7 @@ describe('cell and storage order', () => {
   });
 });
 
+// Checks that set() takes values in on-paper order and returns the same
 describe('clean', () => {
   it('turns floating-point noise into 0', () => {
     expect(clean(Math.cos(Math.PI / 2))).toBe(0);
@@ -38,6 +40,7 @@ describe('clean', () => {
   });
 });
 
+// Checks both sides
 describe('matricesEqual', () => {
   it('ignores differences smaller than the tolerance', () => {
     const a = new Matrix4();

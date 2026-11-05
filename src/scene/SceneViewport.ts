@@ -1,26 +1,22 @@
 import {
   AmbientLight,
-  BoxGeometry,
   Color,
   DirectionalLight,
   GridHelper,
-  Mesh,
-  MeshStandardMaterial,
   PerspectiveCamera,
   Scene,
   WebGLRenderer,
 } from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { disposeObject } from './dispose';
+import { createWorldAxes } from './worldAxes';
 
-/**
- * Owns all Three.js state: renderer, scene, camera and the render loop.
- */
 export class SceneViewport {
   private readonly container: HTMLElement;
   private readonly renderer: WebGLRenderer;
   private readonly scene: Scene;
   private readonly camera: PerspectiveCamera;
-  private readonly cube: Mesh<BoxGeometry, MeshStandardMaterial>;
-  private readonly grid: GridHelper;
+  private readonly controls: OrbitControls;
   private readonly resizeObserver: ResizeObserver;
 
   constructor(container: HTMLElement) {
@@ -33,30 +29,29 @@ export class SceneViewport {
     this.scene = new Scene();
     this.scene.background = new Color('#14161b');
 
-    this.camera = new PerspectiveCamera(50, 1, 0.1, 100);
-    this.camera.position.set(4, 3, 6);
-    this.camera.lookAt(0, 0, 0);
+    this.camera = new PerspectiveCamera(50, 1, 0.1, 200);
+    this.camera.position.set(7, 6, 9);
+
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enableDamping = true;
+    this.controls.target.set(0, 0.5, 0);
+    this.controls.update();
 
     this.scene.add(new AmbientLight(0xffffff, 0.6));
     const sun = new DirectionalLight(0xffffff, 1.5);
     sun.position.set(5, 8, 5);
     this.scene.add(sun);
 
-    this.grid = new GridHelper(10, 10);
-    this.scene.add(this.grid);
-
-    this.cube = new Mesh(
-      new BoxGeometry(1, 1, 1),
-      new MeshStandardMaterial({ color: '#4a8fe8' }),
-    );
-    this.cube.position.y = 0.5;
-    this.scene.add(this.cube);
+    const grid = new GridHelper(20, 20, 0x3a3f4b, 0x262a33);
+    grid.position.y = -0.001;
+    this.scene.add(grid);
+    this.scene.add(createWorldAxes(6));
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(container);
     this.resize();
 
-    this.renderer.setAnimationLoop((time) => this.frame(time));
+    this.renderer.setAnimationLoop(() => this.frame());
   }
 
   private resize(): void {
@@ -67,17 +62,16 @@ export class SceneViewport {
     this.camera.updateProjectionMatrix();
   }
 
-  private frame(timeMs: number): void {
-    this.cube.rotation.y = timeMs / 1000;
+  private frame(): void {
+    this.controls.update();
     this.renderer.render(this.scene, this.camera);
   }
 
   dispose(): void {
     this.renderer.setAnimationLoop(null);
     this.resizeObserver.disconnect();
-    this.cube.geometry.dispose();
-    this.cube.material.dispose();
-    this.grid.dispose();
+    this.controls.dispose();
+    disposeObject(this.scene);
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }
