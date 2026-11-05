@@ -6,10 +6,16 @@ import {
   PerspectiveCamera,
   Scene,
   WebGLRenderer,
+  Group,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { disposeObject } from './dispose';
 import { createWorldAxes } from './worldAxes';
+import { composePipeline } from '../core/pipeline/compose';
+import { rotate, scale, translate } from '../core/pipeline/operations';
+import type { Pipeline } from '../core/pipeline/types';
+import { createHouse } from './house';
+import { createLocalAxes } from './localAxes';
 
 export class SceneViewport {
   private readonly container: HTMLElement;
@@ -18,6 +24,7 @@ export class SceneViewport {
   private readonly camera: PerspectiveCamera;
   private readonly controls: OrbitControls;
   private readonly resizeObserver: ResizeObserver;
+  private readonly house: Group;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -47,6 +54,13 @@ export class SceneViewport {
     this.scene.add(grid);
     this.scene.add(createWorldAxes(6));
 
+    this.house = createHouse();
+    this.house.matrixAutoUpdate = false;
+    this.house.add(createLocalAxes(2.2));
+    this.scene.add(this.house);
+
+    this.applyPipeline([scale(1, 1.5, 1), rotate('y', 45), translate(3, 0, 0)]);
+
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(container);
     this.resize();
@@ -65,6 +79,11 @@ export class SceneViewport {
   private frame(): void {
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
+  }
+
+  private applyPipeline(pipeline: Pipeline): void {
+  this.house.matrix.copy(composePipeline(pipeline));
+  this.house.matrixWorldNeedsUpdate = true;
   }
 
   dispose(): void {
