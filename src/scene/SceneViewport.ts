@@ -13,7 +13,7 @@ import { disposeObject } from './dispose';
 import { createWorldAxes } from './worldAxes';
 import { composePipeline } from '../core/pipeline/compose';
 import type { StoreApi } from 'zustand/vanilla';
-import type { PipelineState } from '../store/pipelineStore';
+import { toPipeline, type PipelineState } from '../store/pipelineStore';
 import type { Pipeline } from '../core/pipeline/types';
 import { createHouse } from './house';
 import { createLocalAxes } from './localAxes';
@@ -61,9 +61,9 @@ export class SceneViewport {
     this.house.add(createLocalAxes(2.2));
     this.scene.add(this.house);
 
-    this.applyPipeline(store.getState().pipeline);
+    this.applyPipeline(toPipeline(store.getState().blocks));
     this.unsubscribe = store.subscribe((state, previous) => {
-      if (state.pipeline !== previous.pipeline) this.applyPipeline(state.pipeline);
+      if (state.blocks !== previous.blocks) this.applyPipeline(toPipeline(state.blocks));
     });
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -87,6 +87,7 @@ export class SceneViewport {
   }
 
   private applyPipeline(pipeline: Pipeline): void {
+  // Applies pipeline. Comment to view initial state.
   this.house.matrix.copy(composePipeline(pipeline));
   this.house.matrixWorldNeedsUpdate = true;
   }
