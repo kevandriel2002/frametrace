@@ -1,3 +1,23 @@
+/* Define colours once as variables */
+:root {
+  color-scheme: dark;
+  --bg: #0f1115;
+  --panel: #181b21;
+  --panel-2: #20242c;
+  --border: #2c313b;
+  --text: #e6e8ec;
+  --muted: #8a909c;
+  --accent: #7aa2ff;
+  --danger: #e5484d;
+  --axis-x: #d55e00;
+  --axis-y: #009e73;
+  --axis-z: #56b4e9;
+  --kind-translate: #7aa2ff;
+  --kind-rotate: #c792ea;
+  --kind-scale: #e6a700;
+  font-family: system-ui, sans-serif;
+}
+
 html,
 body,
 #root {
@@ -6,7 +26,49 @@ body,
 }
 
 body {
-  background: #0f1115;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button,
+select,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button,
+select {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Shows which control has keyboard focus */
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Layout */
+.app {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  height: 100%;
+}
+
+.app-viewport {
+  min-width: 0;
+  min-height: 0;
 }
 
 .viewport {
@@ -17,4 +79,156 @@ body {
 
 .viewport canvas {
   display: block;
+}
+
+/* Panel */
+.panel {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hint,
+.empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Blocks */
+.block-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.block {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.block-translate {
+  border-left-color: var(--kind-translate);
+}
+.block-rotate {
+  border-left-color: var(--kind-rotate);
+}
+.block-scale {
+  border-left-color: var(--kind-scale);
+}
+
+.block-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.block-index {
+  min-width: 1.5em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.block-title {
+  flex: 1;
+  font-weight: 600;
+}
+
+.icon-button {
+  padding: 2px 8px;
+}
+
+.icon-button:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* Inputs */
+.vec3-fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.rotate-fields {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px;
+  align-items: center;
+}
+
+.number-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.number-field input {
+  width: 100%;
+  min-width: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+
+.number-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.axis-x .number-field-label {
+  color: var(--axis-x);
+}
+.axis-y .number-field-label {
+  color: var(--axis-y);
+}
+.axis-z .number-field-label {
+  color: var(--axis-z);
+}
+
+/* Narrow screens: panel on top, viewport below */
+@media (max-width: 700px) {
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 60vh;
+    height: auto;
+    min-height: 100%;
+  }
+
+  .panel {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
 }
