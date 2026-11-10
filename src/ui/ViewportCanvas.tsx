@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { SceneViewport } from '../scene/SceneViewport';
 import { pipelineStore } from '../store/pipelineStore';
+import { playbackStore } from '../store/playbackStore';
 
 /** Thin shell: gives SceneViewport a DOM element and cleans it up on unmount. */
 export function ViewportCanvas() {
@@ -9,7 +10,7 @@ export function ViewportCanvas() {
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const viewport = new SceneViewport(container, pipelineStore);
+    const viewport = new SceneViewport(container, pipelineStore, playbackStore);
     return () => viewport.dispose();
   }, []);
 

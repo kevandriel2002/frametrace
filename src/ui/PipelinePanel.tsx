@@ -44,7 +44,7 @@ export function PipelinePanel() {
       ) : (
         <ol className="block-list">
           {blocks.map((block, index) => (
-            <BlockCard key={block.id} block={block} index={index} />
+            <BlockCard key={block.id} block={block} index={index} count={blocks.length} />
           ))}
         </ol>
       )}
