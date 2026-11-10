@@ -3,9 +3,12 @@ import logo from './assets/logo.png'
 import { PipelinePanel } from './ui/PipelinePanel';
 import { ViewportCanvas } from './ui/ViewportCanvas';
 import { useUndoShortcuts } from './ui/useUndoShortcuts';
+import { TimelineBar } from './ui/TimelineBar';
+import { usePlaybackClock } from './ui/usePlaybackClock';
 
 function App() {
   useUndoShortcuts();
+  usePlaybackClock();
   return (
     <div className="app">
       <header className='app-header'>
@@ -16,6 +19,7 @@ function App() {
       <main className="app-viewport">
         <ViewportCanvas />
       </main>
+      <TimelineBar />
     </div>
   );
 }

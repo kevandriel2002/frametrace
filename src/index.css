@@ -66,7 +66,8 @@ input:focus-visible {
   grid-template-rows: auto 1fr;
   grid-template-areas:
     'header   header'
-    'panel    viewport';
+    'panel    viewport'
+    'panel    timeline';
   height: 100%;
 }
 
@@ -160,6 +161,7 @@ input:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
 }
 
 .block-translate {
@@ -187,6 +189,23 @@ input:focus-visible {
 .block-title {
   flex: 1;
   font-weight: 600;
+}
+
+.block.is-pending {
+  opacity: 0.55;
+}
+
+.block.is-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.block-progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--accent);
 }
 
 .icon-button {
@@ -243,15 +262,51 @@ input:focus-visible {
   color: var(--axis-z);
 }
 
+.timeline {
+  grid-area: timeline;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+}
+
+.timeline-play {
+  min-width: 5em;
+}
+
+.timeline-slider {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+}
+
+.timeline-readout {
+  min-width: 6em;
+  text-align: right;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline-speed {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 /* Narrow screens: panel on top, viewport below */
 @media (max-width: 700px) {
   .app {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 60vh;
+    grid-template-rows: auto auto 60vh auto;
     grid-template-areas: 
     'header'
     'panel'
-    'viewport';
+    'viewport'
+    'timeline';
     height: auto;
     min-height: 100%;
   }

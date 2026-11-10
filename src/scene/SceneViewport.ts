@@ -11,12 +11,12 @@ import {
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { disposeObject } from './dispose';
 import { createWorldAxes } from './worldAxes';
-import { composePipeline } from '../core/pipeline/compose';
 import type { StoreApi } from 'zustand/vanilla';
 import { toPipeline, type PipelineState } from '../store/pipelineStore';
-import type { Pipeline } from '../core/pipeline/types';
 import { createHouse } from './house';
 import { createLocalAxes } from './localAxes';
+import { composeAt, effectivePlayhead } from '../core/pipeline/playhead';
+import type { PlaybackState } from '../store/playbackStore';
 
 export class SceneViewport {
   private readonly container: HTMLElement;
@@ -26,9 +26,11 @@ export class SceneViewport {
   private readonly controls: OrbitControls;
   private readonly resizeObserver: ResizeObserver;
   private readonly house: Group;
+  private readonly pipeline: StoreApi<PipelineState>;
+  private readonly playback: StoreApi<PlaybackState>;
   private readonly unsubscribe: () => void;
 
-  constructor(container: HTMLElement, store: StoreApi<PipelineState>) {
+  constructor(container: HTMLElement, pipeline: StoreApi<PipelineState>, playback: StoreApi<PlaybackState>) {
     this.container = container;
 
     this.renderer = new WebGLRenderer({ antialias: true });
@@ -61,10 +63,20 @@ export class SceneViewport {
     this.house.add(createLocalAxes(2.2));
     this.scene.add(this.house);
 
-    this.applyPipeline(toPipeline(store.getState().blocks));
-    this.unsubscribe = store.subscribe((state, previous) => {
-      if (state.blocks !== previous.blocks) this.applyPipeline(toPipeline(state.blocks));
+    this.pipeline = pipeline;
+    this.playback = playback;
+    this.updateHouse();
+
+    const stopPipeline = pipeline.subscribe((state, previous) => {
+      if (state.blocks !== previous.blocks) this.updateHouse();
     });
+    const stopPlayback = playback.subscribe((state, previous) => {
+      if (state.playhead !== previous.playhead) this.updateHouse();
+    });
+    this.unsubscribe = () => {
+      stopPipeline();
+      stopPlayback();
+    };
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(container);
@@ -86,10 +98,13 @@ export class SceneViewport {
     this.renderer.render(this.scene, this.camera);
   }
 
-  private applyPipeline(pipeline: Pipeline): void {
-  // Applies pipeline. Comment to view initial state.
-  this.house.matrix.copy(composePipeline(pipeline));
-  this.house.matrixWorldNeedsUpdate = true;
+  // House depends on two things : blocks and playhead
+  // Reads both stores fresh each time
+  private updateHouse(): void {
+    const pipeline = toPipeline(this.pipeline.getState().blocks);
+    const t = effectivePlayhead(this.playback.getState().playhead, pipeline.length);
+    this.house.matrix.copy(composeAt(pipeline, t));
+    this.house.matrixWorldNeedsUpdate = true;
   }
 
   dispose(): void {
