@@ -63,8 +63,32 @@ input:focus-visible {
 .app {
   display: grid;
   grid-template-columns: 340px 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'header   header'
+    'panel    viewport';
   height: 100%;
 }
+
+.app-header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-logo {
+  height: 28px;
+}
+
+.app-title {
+  font-weight: 700;
+  font-size: 18px;
+}
+
 
 .app-viewport {
   min-width: 0;
@@ -83,6 +107,7 @@ input:focus-visible {
 
 /* Panel */
 .panel {
+  grid-area: panel;
   background: var(--panel);
   border-right: 1px solid var(--border);
   padding: 16px;
@@ -223,6 +248,10 @@ input:focus-visible {
   .app {
     grid-template-columns: 1fr;
     grid-template-rows: auto 60vh;
+    grid-template-areas: 
+    'header'
+    'panel'
+    'viewport';
     height: auto;
     min-height: 100%;
   }
