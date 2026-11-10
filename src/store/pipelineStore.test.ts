@@ -9,6 +9,7 @@ import {
   toPipeline,
   type Block,
 } from './pipelineStore';
+import { matricesEqual } from '../core/math/matrix';
 
 const state = () => pipelineStore.getState();
 
@@ -69,6 +70,39 @@ describe('editing actions', () => {
   it('setPipeline replaces every block', () => {
     state().setPipeline([rotate('z', 90)]);
     expect(toPipeline(state().blocks)).toEqual([rotate('z', 90)]);
+  });
+});
+
+describe('moveBlock', () => {
+  it('moves a block to a new position', () => {
+    const first = blockAt(0);
+    state().moveBlock(first.id, 2);
+    expect(blockAt(2)).toBe(first);
+    expect(toPipeline(state().blocks)).toEqual([DEMO_PIPELINE[1], DEMO_PIPELINE[2], DEMO_PIPELINE[0]]);
+  });
+
+  it('can be undone', () => {
+    const before = state().blocks;
+    state().moveBlock(blockAt(0).id, 1);
+    state().undo();
+    expect(state().blocks).toBe(before);
+  });
+
+  it('ignores moves that change nothing', () => {
+    const before = state().blocks;
+    state().moveBlock(blockAt(0).id, 0);
+    state().moveBlock(blockAt(0).id, -1);
+    state().moveBlock(blockAt(2).id, 3);
+    state().moveBlock('no-such-block', 1);
+    expect(state().blocks).toBe(before);
+    expect(state().past).toHaveLength(0);
+  });
+
+  it('changes the result, because order matters', () => {
+    const before = composePipeline(toPipeline(state().blocks));
+    state().moveBlock(blockAt(2).id, 0);
+    const after = composePipeline(toPipeline(state().blocks));
+    expect(matricesEqual(before, after)).toBe(false);
   });
 });
 

@@ -46,6 +46,7 @@ export type PipelineState = {
   removeBlock: (id: string) => void;
   replaceBlock: (id: string, op: Operation) => void;
   setPipeline: (pipeline: Pipeline) => void;
+  moveBlock: (id: string, toIndex: number) => void;
 
   // Runs when a field is clicked into
   beginEdit: () => void;
@@ -60,6 +61,15 @@ export type PipelineState = {
 
 function replaceOp(blocks: Blocks, id: string, op: Operation): Blocks {
   return blocks.map((block) => (block.id === id ? { ...block, op } : block));
+}
+
+// Copies the list, removes item from old position and inserts at new position
+function moveItem<T>(items: readonly T[], from: number, to: number): T[] {
+  const result = [...items];
+  const [item] = result.splice(from, 1);
+  if (item === undefined) return result;
+  result.splice(to, 0, item);
+  return result;
 }
 
 // Saves current blocks into past, sets new block and clears future
@@ -85,6 +95,13 @@ export const pipelineStore = createStore<PipelineState>()((set) => ({
 
   removeBlock: (id) =>
     set((s) => withHistory(s, s.blocks.filter((block) => block.id !== id))),
+
+  moveBlock: (id, toIndex) =>
+    set((s) => {
+      const from = s.blocks.findIndex((block) => block.id === id);
+      if (from === -1 || from === toIndex || toIndex < 0 || toIndex >= s.blocks.length) return s;
+      return withHistory(s, moveItem(s.blocks, from, toIndex));
+    }),
 
   replaceBlock: (id, op) =>
     set((s) => withHistory(s, replaceOp(s.blocks, id, op))),

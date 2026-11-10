@@ -1,4 +1,17 @@
-// Shows pipeline edit functions
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { useStore } from 'zustand';
 import { pipelineStore, type OperationKind } from '../store/pipelineStore';
 import { BlockCard } from './BlockCard';
@@ -13,7 +26,18 @@ export function PipelinePanel() {
   const blocks = useStore(pipelineStore, (s) => s.blocks);
   const canUndo = useStore(pipelineStore, (s) => s.past.length > 0);
   const canRedo = useStore(pipelineStore, (s) => s.future.length > 0);
-  const { addBlock, undo, redo } = pipelineStore.getState();
+  const { addBlock, moveBlock, undo, redo } = pipelineStore.getState();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  function handleDragEnd({ active, over }: DragEndEvent) {
+    if (!over || active.id === over.id) return;
+    const toIndex = blocks.findIndex((block) => block.id === over.id);
+    if (toIndex !== -1) moveBlock(String(active.id), toIndex);
+  }
 
   return (
     <aside className="panel">
@@ -37,16 +61,20 @@ export function PipelinePanel() {
         ))}
       </div>
 
-      <p className="hint">Steps run from top to bottom.</p>
+      <p className="hint">Steps run from top to bottom. Drag ⠿ or use ↑ ↓ to reorder.</p>
 
       {blocks.length === 0 ? (
         <p className="empty">No steps yet. The house is untransformed (identity).</p>
       ) : (
-        <ol className="block-list">
-          {blocks.map((block, index) => (
-            <BlockCard key={block.id} block={block} index={index} count={blocks.length} />
-          ))}
-        </ol>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={blocks.map((block) => block.id)} strategy={verticalListSortingStrategy}>
+            <ol className="block-list">
+              {blocks.map((block, index) => (
+                <BlockCard key={block.id} block={block} index={index} count={blocks.length} />
+              ))}
+            </ol>
+          </SortableContext>
+        </DndContext>
       )}
     </aside>
   );

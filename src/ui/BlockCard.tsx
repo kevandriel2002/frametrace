@@ -1,3 +1,6 @@
+// dnd functionality
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 // Shows one step with its number, title and a delete button, followed by right inputs
 import type { Axis, Operation } from '../core/pipeline/types';
 import { pipelineStore, type Block } from '../store/pipelineStore';
@@ -23,23 +26,71 @@ type Props = {
 };
 
 export function BlockCard({ block, index, count }: Props) {
-  const { removeBlock } = pipelineStore.getState();
+  const { removeBlock, moveBlock } = pipelineStore.getState();
+  // dnd functionality
   const progress = useStore(playbackStore, (s) =>
     stepProgress(effectivePlayhead(s.playhead, count), index),
   );
+
+  // dnd functionality
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
+    useSortable({ id: block.id }); // Registers card with dnd-kit
+
   const status = progress >= 1 ? 'done' : progress <= 0 ? 'pending' : 'active';
 
+  // dnd functionality
+  const className = [
+    'block',
+    `block-${block.op.kind}`,
+    `is-${status}`,
+    isDragging ? 'is-dragging' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const step = index + 1;
+
   return (
-    <li className={`block block-${block.op.kind} is-${status}`}>
+    <li
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={className}
+    >
       <div className="block-header">
-        <span className="block-index">{index + 1}</span>
+        <button
+          type="button"
+          ref={setActivatorNodeRef}
+          className="drag-handle"
+          aria-label={`Reorder step ${step}`}
+          {...attributes} // Adds accessibility attributes
+          {...listeners}
+        >
+          ⠿
+        </button>
+        <span className="block-index">{step}</span>
         <span className="block-title">{TITLES[block.op.kind]}</span>
         <button
           type="button"
           className="icon-button"
+          onClick={() => moveBlock(block.id, index - 1)}
+          disabled={index === 0}
+          aria-label={`Move step ${step} up`}
+        >
+          ↑
+        </button>
+        <button
+          type="button"
+          className="icon-button"
+          onClick={() => moveBlock(block.id, index + 1)}
+          disabled={index === count - 1}
+          aria-label={`Move step ${step} down`}
+        >
+          ↓
+        </button>
+        <button
+          type="button"
+          className="icon-button icon-button-danger"
           onClick={() => removeBlock(block.id)}
-          aria-label={`Delete step ${index + 1}`}
-          title="Delete step"
+          aria-label={`Delete step ${step}`}
         >
           ✕
         </button>
@@ -51,6 +102,7 @@ export function BlockCard({ block, index, count }: Props) {
     </li>
   );
 }
+
 
 function BlockEditor({ block }: { block: Block }) {
   const { id, op } = block;
