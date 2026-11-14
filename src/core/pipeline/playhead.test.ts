@@ -4,7 +4,7 @@ import { isIdentity, matricesEqual } from '../math/matrix';
 import { expectPoint, transformPoint } from '../testUtils';
 import { composePipeline } from './compose';
 import { opToMatrix, rotate, scale, translate } from './operations';
-import { composeAt, effectivePlayhead, partialOperation, stepProgress } from './playhead';
+import { composeAt, effectivePlayhead, partialOperation, stepProgress, blockProgress } from './playhead';
 
 const pipeline = [translate(2, 0, 0), rotate('z', 90), scale(1, 2, 1)];
 const sampleOps = [translate(2, -3, 4), rotate('x', 120), scale(3, -1, 0.5)];
@@ -76,5 +76,36 @@ describe('stepProgress and effectivePlayhead', () => {
   it('clamps the playhead to the pipeline', () => {
     expect(effectivePlayhead(5, 3)).toBe(3);
     expect(effectivePlayhead(-1, 3)).toBe(0);
+  });
+});
+
+describe('frame modes', () => {
+  const orbit = [translate(3, 0, 0), rotate('y', 90)];
+
+  it('both readings end at the same matrix', () => {
+    expect(matricesEqual(composeAt(pipeline, 3, 'local'), composeAt(pipeline, 3, 'world'))).toBe(true);
+  });
+
+  it('world mode applies the first step first, about the world axes', () => {
+    expectPoint(transformPoint(composeAt(orbit, 1, 'world'), 0, 0, 0), 3, 0, 0);
+  });
+
+  it('local mode applies the last step first, so halfway the house has only turned', () => {
+    expectPoint(transformPoint(composeAt(orbit, 1, 'local'), 0, 0, 0), 0, 0, 0);
+  });
+
+  it('local mode moves along the house’s own turned axis', () => {
+    expectPoint(transformPoint(composeAt(orbit, 1.5, 'local'), 0, 0, 0), 0, 0, -1.5);
+  });
+
+  it('both readings arrive at the same place', () => {
+    expectPoint(transformPoint(composeAt(orbit, 2, 'world'), 0, 0, 0), 0, 0, -3);
+    expectPoint(transformPoint(composeAt(orbit, 2, 'local'), 0, 0, 0), 0, 0, -3);
+  });
+
+  it('blockProgress animates the last block first in local mode', () => {
+    expect(blockProgress(0.5, 2, 3, 'local')).toBeCloseTo(0.5);
+    expect(blockProgress(0.5, 0, 3, 'local')).toBe(0);
+    expect(blockProgress(0.5, 0, 3, 'world')).toBeCloseTo(0.5);
   });
 });
