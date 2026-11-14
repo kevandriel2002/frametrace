@@ -208,6 +208,73 @@ input:focus-visible {
   background: var(--accent);
 }
 
+.reading-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.reading-product {
+  margin: 0;
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.reading-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.reading-options legend {
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.reading-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.reading-option:has(input:checked) {
+  border-color: var(--accent);
+}
+
+.reading-option input {
+  margin-top: 2px;
+  accent-color: var(--accent);
+}
+
+.reading-order {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.reading-rewind {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
 .icon-button {
   padding: 2px 8px;
 }

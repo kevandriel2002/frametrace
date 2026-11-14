@@ -6,6 +6,8 @@ const clamp01 = (x: number): number => Math.min(1, Math.max(0, x));
 
 const lerp = (from: number, to: number, fraction: number): number => from + (to - from) * fraction;
 
+export type FrameMode = 'world' | 'local';
+
 // Returns partially completed operation
 export function partialOperation(op: Operation, fraction: number): Operation {
   const f = clamp01(fraction);
@@ -35,11 +37,27 @@ export function effectivePlayhead(playhead: number | null, stepCount: number): n
 }
 
 // composePipeline with partial steps
-export function composeAt(pipeline: Pipeline, playhead: number): Matrix4 {
+export function composeAt(pipeline: Pipeline, playhead: number, mode: FrameMode = 'world'): Matrix4 {
   const result = new Matrix4();
-  pipeline.forEach((op, index) => {
-    const progress = stepProgress(playhead, index);
-    if (progress > 0) result.premultiply(opToMatrix(partialOperation(op, progress)));
+  const ordered = mode === 'world' ? pipeline : [...pipeline].reverse();
+
+  ordered.forEach((op, position) => {
+    const progress = stepProgress(playhead, position);
+    if (progress <= 0) return;
+    const step = opToMatrix(partialOperation(op, progress));
+    if (mode === 'world') result.premultiply(step);
+    else result.multiply(step);
   });
+
   return result;
+}
+
+export function blockProgress(
+  playhead: number,
+  index: number,
+  count: number,
+  mode: FrameMode,
+): number {
+  const position = mode === 'world' ? index : count - 1 - index;
+  return stepProgress(playhead, position);
 }

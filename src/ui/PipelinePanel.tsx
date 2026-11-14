@@ -15,6 +15,8 @@ import {
 import { useStore } from 'zustand';
 import { pipelineStore, type OperationKind } from '../store/pipelineStore';
 import { BlockCard } from './BlockCard';
+import { playbackStore } from '../store/playbackStore';
+import { ReadingCard } from './ReadingCard';
 
 const ADD_BUTTONS: { kind: OperationKind; label: string }[] = [
   { kind: 'translate', label: '+ Translate' },
@@ -26,6 +28,7 @@ export function PipelinePanel() {
   const blocks = useStore(pipelineStore, (s) => s.blocks);
   const canUndo = useStore(pipelineStore, (s) => s.past.length > 0);
   const canRedo = useStore(pipelineStore, (s) => s.future.length > 0);
+  const mode = useStore(playbackStore, (s) => s.mode);
   const { addBlock, moveBlock, undo, redo } = pipelineStore.getState();
 
   const sensors = useSensors(
@@ -61,7 +64,14 @@ export function PipelinePanel() {
         ))}
       </div>
 
-      <p className="hint">Steps run from top to bottom. Drag ⠿ or use ↑ ↓ to reorder.</p>
+      <p className="hint">
+        {mode === 'world'
+          ? 'Steps run top to bottom, each about the world axes.'
+          : 'Steps run bottom to top, each about the house’s own axes.'}{' '}
+        Drag ⠿ or use ↑ ↓ to reorder.
+      </p>
+
+      <ReadingCard />
 
       {blocks.length === 0 ? (
         <p className="empty">No steps yet. The house is untransformed (identity).</p>

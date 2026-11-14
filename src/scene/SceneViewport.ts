@@ -71,7 +71,7 @@ export class SceneViewport {
       if (state.blocks !== previous.blocks) this.updateHouse();
     });
     const stopPlayback = playback.subscribe((state, previous) => {
-      if (state.playhead !== previous.playhead) this.updateHouse();
+      if (state.playhead !== previous.playhead || state.mode !== previous.mode) this.updateHouse();
     });
     this.unsubscribe = () => {
       stopPipeline();
@@ -102,8 +102,9 @@ export class SceneViewport {
   // Reads both stores fresh each time
   private updateHouse(): void {
     const pipeline = toPipeline(this.pipeline.getState().blocks);
-    const t = effectivePlayhead(this.playback.getState().playhead, pipeline.length);
-    this.house.matrix.copy(composeAt(pipeline, t));
+    const { playhead, mode } = this.playback.getState();
+    const t = effectivePlayhead(playhead, pipeline.length);
+    this.house.matrix.copy(composeAt(pipeline, t, mode));
     this.house.matrixWorldNeedsUpdate = true;
   }
 

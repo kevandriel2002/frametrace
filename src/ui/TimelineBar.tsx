@@ -1,28 +1,43 @@
 // Renders timeline controls (Play/Pause, scrubber slider, etc.)
 import { useStore } from 'zustand';
 import { effectivePlayhead } from '../core/pipeline/playhead';
-import { pipelineStore } from '../store/pipelineStore';
+import { pipelineStore, toPipeline } from '../store/pipelineStore';
 import { SPEEDS, playbackStore } from '../store/playbackStore';
+import { invertPipeline } from '../core/pipeline/inverse';
 
 export function TimelineBar() {
   const stepCount = useStore(pipelineStore, (s) => s.blocks.length);
   const playhead = useStore(playbackStore, (s) => s.playhead);
   const playing = useStore(playbackStore, (s) => s.playing);
   const speed = useStore(playbackStore, (s) => s.speed);
-  const { play, pause, scrubTo, jumpToEnd, setSpeed } = playbackStore.getState();
+  const direction = useStore(playbackStore, (s) => s.direction);
+  const canRewind = useStore(pipelineStore, (s) => invertPipeline(toPipeline(s.blocks)) !== null);
+  const { play, rewind, pause, scrubTo, jumpToEnd, setSpeed } = playbackStore.getState();
 
   const t = effectivePlayhead(playhead, stepCount);
   const empty = stepCount === 0;
+  const rewinding = playing && direction === -1;
+  const playingForward = playing && direction === 1;
+  
 
   return (
     <div className="timeline">
       <button
         type="button"
-        onClick={() => (playing ? pause() : play(stepCount))}
+        onClick={() => (rewinding ? pause() : rewind(stepCount))}
+        disabled={empty || !canRewind || (t === 0 && !rewinding)}
+        title={canRewind ? 'Rewind to the identity' : 'Unavailable: a scale of 0 cannot be undone'}
+        className="timeline-play"
+      >
+        {rewinding ? 'Pause' : 'Rewind'}
+      </button>
+      <button
+        type="button"
+        onClick={() => (playingForward ? pause() : play(stepCount))}
         disabled={empty}
         className="timeline-play"
       >
-        {playing ? 'Pause' : 'Play'}
+        {playingForward ? 'Pause' : 'Play'}
       </button>
 
       <input

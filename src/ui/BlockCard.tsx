@@ -7,7 +7,7 @@ import { pipelineStore, type Block } from '../store/pipelineStore';
 import { NumberField } from './NumberField';
 import { Vec3Fields } from './Vec3Fields';
 import { useStore } from 'zustand';
-import { effectivePlayhead, stepProgress } from '../core/pipeline/playhead';
+import { effectivePlayhead, blockProgress } from '../core/pipeline/playhead';
 import { playbackStore } from '../store/playbackStore';
 
 const TITLES: Record<Operation['kind'], string> = {
@@ -29,7 +29,7 @@ export function BlockCard({ block, index, count }: Props) {
   const { removeBlock, moveBlock } = pipelineStore.getState();
   // dnd functionality
   const progress = useStore(playbackStore, (s) =>
-    stepProgress(effectivePlayhead(s.playhead, count), index),
+    blockProgress(effectivePlayhead(s.playhead, count), index, count, s.mode),
   );
 
   // dnd functionality
