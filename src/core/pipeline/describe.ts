@@ -1,9 +1,8 @@
 // Turns Pipeline into readable math text
-import { clean } from '../math/matrix';
 import type { FrameMode } from './playhead';
 import type { Operation, Pipeline } from './types';
+import { formatNumber as num} from '../math/format';
 
-const num = (value: number): string => String(Number(clean(value).toFixed(3)));
 
 // Gives short labels (ex: T(3, 0, 0))
 export function formatOperation(op: Operation): string {
