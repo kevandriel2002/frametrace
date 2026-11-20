@@ -3,39 +3,60 @@ import {
   Color,
   DirectionalLight,
   GridHelper,
+  Group,
   PerspectiveCamera,
   Scene,
   WebGLRenderer,
-  Group,
+  type Matrix4,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { disposeObject } from './dispose';
-import { createWorldAxes } from './worldAxes';
+import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import type { StoreApi } from 'zustand/vanilla';
-import { toPipeline, type PipelineState } from '../store/pipelineStore';
-import { createHouse } from './house';
-import { createLocalAxes } from './localAxes';
+import { formatPoint } from '../core/math/format';
+import { transformPoints } from '../core/math/points';
+import { HIGHLIGHTED_VERTEX, MODEL_VERTICES } from '../core/models';
 import { composeAt, effectivePlayhead } from '../core/pipeline/playhead';
+import { toPipeline, type PipelineState } from '../store/pipelineStore';
 import type { PlaybackState } from '../store/playbackStore';
+import type { ViewState } from '../store/viewStore';
+import { disposeObject } from './dispose';
+import { createLocalAxes } from './localAxes';
+import { createModel } from './models';
+import { createWorldAxes } from './worldAxes';
+
+export type ViewportStores = {
+  pipeline: StoreApi<PipelineState>;
+  playback: StoreApi<PlaybackState>;
+  view: StoreApi<ViewState>;
+};
+
+type Label = { object: CSS2DObject; vertexIndex: number };
 
 export class SceneViewport {
   private readonly container: HTMLElement;
+  private readonly stores: ViewportStores;
   private readonly renderer: WebGLRenderer;
+  private readonly labelRenderer: CSS2DRenderer;
   private readonly scene: Scene;
   private readonly camera: PerspectiveCamera;
   private readonly controls: OrbitControls;
+  private readonly transformed: Group;
   private readonly resizeObserver: ResizeObserver;
-  private readonly house: Group;
-  private readonly pipeline: StoreApi<PipelineState>;
-  private readonly playback: StoreApi<PlaybackState>;
   private readonly unsubscribe: () => void;
+  private model: Group;
+  private labels: Label[] = [];
 
-  constructor(container: HTMLElement, pipeline: StoreApi<PipelineState>, playback: StoreApi<PlaybackState>) {
+  constructor(container: HTMLElement, stores: ViewportStores) {
     this.container = container;
+    this.stores = stores;
 
     this.renderer = new WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(this.renderer.domElement);
+
+    this.labelRenderer = new CSS2DRenderer();
+    this.labelRenderer.domElement.className = 'label-layer';
+    container.appendChild(this.labelRenderer.domElement);
 
     this.scene = new Scene();
     this.scene.background = new Color('#14161b');
@@ -58,25 +79,33 @@ export class SceneViewport {
     this.scene.add(grid);
     this.scene.add(createWorldAxes(6));
 
-    this.house = createHouse();
-    this.house.matrixAutoUpdate = false;
-    this.house.add(createLocalAxes(2.2));
-    this.scene.add(this.house);
+    this.transformed = new Group();
+    this.transformed.matrixAutoUpdate = false;
+    this.transformed.add(createLocalAxes(2.2));
+    this.scene.add(this.transformed);
 
-    this.pipeline = pipeline;
-    this.playback = playback;
-    this.updateHouse();
+    const { model, display } = stores.view.getState();
+    this.model = createModel(model, display);
+    this.transformed.add(this.model);
+    this.rebuildLabels();
+    this.updateTransform();
 
-    const stopPipeline = pipeline.subscribe((state, previous) => {
-      if (state.blocks !== previous.blocks) this.updateHouse();
-    });
-    const stopPlayback = playback.subscribe((state, previous) => {
-      if (state.playhead !== previous.playhead || state.mode !== previous.mode) this.updateHouse();
-    });
-    this.unsubscribe = () => {
-      stopPipeline();
-      stopPlayback();
-    };
+    const stops = [
+      stores.pipeline.subscribe((state, previous) => {
+        if (state.blocks !== previous.blocks) this.updateTransform();
+      }),
+      stores.playback.subscribe((state, previous) => {
+        if (state.playhead !== previous.playhead || state.mode !== previous.mode) this.updateTransform();
+      }),
+      stores.view.subscribe((state, previous) => {
+        if (state.model !== previous.model || state.display !== previous.display) this.swapModel();
+        if (state.model !== previous.model || state.labels !== previous.labels) {
+          this.rebuildLabels();
+          this.updateTransform();
+        }
+      }),
+    ];
+    this.unsubscribe = () => stops.forEach((stop) => stop());
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(container);
@@ -85,10 +114,67 @@ export class SceneViewport {
     this.renderer.setAnimationLoop(() => this.frame());
   }
 
+  private currentMatrix(): Matrix4 {
+    const pipeline = toPipeline(this.stores.pipeline.getState().blocks);
+    const { playhead, mode } = this.stores.playback.getState();
+    return composeAt(pipeline, effectivePlayhead(playhead, pipeline.length), mode);
+  }
+
+  private updateTransform(): void {
+    const matrix = this.currentMatrix();
+    this.transformed.matrix.copy(matrix);
+    this.transformed.matrixWorldNeedsUpdate = true;
+    this.updateLabelText(matrix);
+  }
+
+  private swapModel(): void {
+    const { model, display } = this.stores.view.getState();
+    this.transformed.remove(this.model);
+    disposeObject(this.model);
+    this.model = createModel(model, display);
+    this.transformed.add(this.model);
+  }
+
+  private rebuildLabels(): void {
+    for (const { object } of this.labels) this.transformed.remove(object);
+
+    const { model, labels } = this.stores.view.getState();
+    const vertices = MODEL_VERTICES[model];
+    const highlighted = HIGHLIGHTED_VERTEX[model];
+    const indices =
+      labels === 'all'
+        ? vertices.map((_, i) => i)
+        : labels === 'one' && highlighted !== null
+          ? [highlighted]
+          : [];
+
+    this.labels = indices.flatMap((vertexIndex) => {
+      const vertex = vertices[vertexIndex];
+      if (!vertex) return [];
+      const element = document.createElement('div');
+      element.className = 'vertex-label';
+      const object = new CSS2DObject(element);
+      object.position.set(...vertex);
+      object.center.set(-0.1, 1.1);
+      this.transformed.add(object);
+      return [{ object, vertexIndex }];
+    });
+  }
+
+  private updateLabelText(matrix: Matrix4): void {
+    const { model } = this.stores.view.getState();
+    const moved = transformPoints(matrix, MODEL_VERTICES[model]);
+    for (const { object, vertexIndex } of this.labels) {
+      const point = moved[vertexIndex];
+      if (point) object.element.textContent = formatPoint(point);
+    }
+  }
+
   private resize(): void {
     const { clientWidth: width, clientHeight: height } = this.container;
     if (width === 0 || height === 0) return;
     this.renderer.setSize(width, height);
+    this.labelRenderer.setSize(width, height);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
   }
@@ -96,16 +182,7 @@ export class SceneViewport {
   private frame(): void {
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
-  }
-
-  // House depends on two things : blocks and playhead
-  // Reads both stores fresh each time
-  private updateHouse(): void {
-    const pipeline = toPipeline(this.pipeline.getState().blocks);
-    const { playhead, mode } = this.playback.getState();
-    const t = effectivePlayhead(playhead, pipeline.length);
-    this.house.matrix.copy(composeAt(pipeline, t, mode));
-    this.house.matrixWorldNeedsUpdate = true;
+    this.labelRenderer.render(this.scene, this.camera);
   }
 
   dispose(): void {
@@ -116,5 +193,6 @@ export class SceneViewport {
     disposeObject(this.scene);
     this.renderer.dispose();
     this.renderer.domElement.remove();
+    this.labelRenderer.domElement.remove();
   }
 }

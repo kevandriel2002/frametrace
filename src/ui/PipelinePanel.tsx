@@ -17,6 +17,7 @@ import { pipelineStore, type OperationKind } from '../store/pipelineStore';
 import { BlockCard } from './BlockCard';
 import { playbackStore } from '../store/playbackStore';
 import { ReadingCard } from './ReadingCard';
+import { ModelPicker } from './ModelPicker';
 
 const ADD_BUTTONS: { kind: OperationKind; label: string }[] = [
   { kind: 'translate', label: '+ Translate' },
@@ -43,7 +44,8 @@ export function PipelinePanel() {
   }
 
   return (
-    <aside className="panel">
+    <aside className="panel" data-tour="pipeline">
+      <ModelPicker />
       <header className="panel-header">
         <h2>Pipeline</h2>
         <div className="row">
