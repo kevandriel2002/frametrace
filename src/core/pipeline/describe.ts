@@ -1,7 +1,9 @@
 // Turns Pipeline into readable math text
 import type { FrameMode } from './playhead';
 import type { Operation, Pipeline } from './types';
-import { formatNumber as num} from '../math/format';
+import { formatNumber } from '../math/format';
+
+const num = (value: number): string => formatNumber(value);
 
 
 // Gives short labels (ex: T(3, 0, 0))

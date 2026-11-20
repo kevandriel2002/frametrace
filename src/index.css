@@ -15,6 +15,7 @@
   --kind-translate: #7aa2ff;
   --kind-rotate: #c792ea;
   --kind-scale: #e6a700;
+  --zone-linear: #4fb3a9;
   font-family: system-ui, sans-serif;
 }
 
@@ -446,6 +447,60 @@ input:focus-visible {
   padding: 4px 8px;
   border-radius: 4px;
   text-align: right;
+}
+
+/* Matrix zones: colour plus label (tooltip, legend, screen reader) */
+.zone-rotation {
+  background: color-mix(in srgb, var(--kind-rotate) 24%, transparent);
+}
+.zone-scale {
+  background: color-mix(in srgb, var(--kind-scale) 24%, transparent);
+}
+.zone-translation {
+  background: color-mix(in srgb, var(--kind-translate) 24%, transparent);
+}
+.zone-linear {
+  background: color-mix(in srgb, var(--zone-linear) 22%, transparent);
+}
+.zone-homogeneous {
+  color: var(--muted);
+}
+.zone-none {
+  color: var(--muted);
+  opacity: 0.5;
+}
+
+.zone-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  max-width: 320px;
+}
+
+.zone-legend li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.zone-swatch {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+
+.inspector-exact {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .drag-handle {
