@@ -9,6 +9,7 @@ import { usePlaybackClock } from './ui/usePlaybackClock';
 import { followPipelineEdits } from './store/links';
 import { pipelineStore } from './store/pipelineStore';
 import { playbackStore } from './store/playbackStore';
+import { BottomDock } from './ui/BottomDock';
 
 function App() {
   useUndoShortcuts();
@@ -25,6 +26,7 @@ function App() {
         <ViewportCanvas />
       </main>
       <TimelineBar />
+      <BottomDock />
     </div>
   );
 }

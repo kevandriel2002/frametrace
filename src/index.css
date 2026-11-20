@@ -67,7 +67,8 @@ input:focus-visible {
   grid-template-areas:
     'header   header'
     'panel    viewport'
-    'panel    timeline';
+    'panel    timeline'
+    'panel    dock';
   height: 100%;
 }
 
@@ -364,6 +365,89 @@ input:focus-visible {
   font-size: 13px;
 }
 
+/* Dock */
+.dock {
+  grid-area: dock;
+  min-width: 0;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+}
+
+.dock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dock-tab {
+  padding-bottom: 2px;
+  border-bottom: 2px solid var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dock-body {
+  max-height: 40vh;
+  padding: 12px 16px;
+  overflow: auto;
+}
+
+/* Inspector */
+.inspector {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 32px;
+}
+
+.inspector-matrix {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inspector-heading {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.inspector-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Matrix */
+.matrix {
+  border-collapse: separate;
+  border-spacing: 3px;
+  padding: 2px 4px;
+  border-left: 2px solid var(--muted);
+  border-right: 2px solid var(--muted);
+  border-radius: 6px;
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.matrix caption {
+  caption-side: bottom;
+  padding-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: left;
+}
+
+.matrix-cell {
+  min-width: 4.5em;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-align: right;
+}
+
 .drag-handle {
   padding: 2px 6px;
   background: transparent;
@@ -392,12 +476,13 @@ input:focus-visible {
 @media (max-width: 700px) {
   .app {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto 60vh auto;
+    grid-template-rows: auto auto 60vh auto auto;
     grid-template-areas: 
     'header'
     'panel'
     'viewport'
-    'timeline';
+    'timeline'
+    'dock';
     height: auto;
     min-height: 100%;
   }
