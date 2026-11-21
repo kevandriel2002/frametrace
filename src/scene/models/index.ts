@@ -4,6 +4,8 @@ import type { ModelKind } from '../../core/models';
 import type { DisplayMode } from '../../store/viewStore';
 import { createCube } from './cube';
 import { createHouse } from './house';
+import { createPlane } from './plane';
+import { createSegment } from './segment';
 
 export function createModel(kind: ModelKind, display: DisplayMode): Group {
   switch (kind) {
@@ -12,7 +14,8 @@ export function createModel(kind: ModelKind, display: DisplayMode): Group {
     case 'cube':
       return createCube(display);
     case 'segment':
+      return createSegment();
     case 'plane':
-      return createCube(display);
+      return createPlane(display);
   }
 }

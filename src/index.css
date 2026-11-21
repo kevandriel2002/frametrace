@@ -16,6 +16,7 @@
   --kind-rotate: #c792ea;
   --kind-scale: #e6a700;
   --zone-linear: #4fb3a9;
+  --warn: #e6a700;
   font-family: system-ui, sans-serif;
 }
 
@@ -462,6 +463,17 @@ input:focus-visible {
   margin: 0;
   color: var(--muted);
   font-size: 13px;
+}
+
+.rank-badge {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.rank-badge.is-collapsed {
+  color: var(--warn);
+  font-weight: 600;
 }
 
 /* Matrix */
