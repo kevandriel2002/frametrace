@@ -22,7 +22,7 @@ export function ReadingCard() {
   if (pipeline.length === 0) return null;
 
   return (
-    <section className="reading-card" aria-label="Reading the product">
+    <section className="reading-card" aria-label="Reading the product" data-tour="reading-card">
       <p className="reading-product">M = {productExpression(pipeline)}</p>
 
       <fieldset className="reading-options">

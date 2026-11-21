@@ -6,7 +6,7 @@ export function BottomDock() {
   const [open, setOpen] = useState(true);
 
   return (
-    <section className="dock" aria-label="Inspector">
+    <section className="dock" aria-label="Inspector" data-tour="inspector">
       <div className="dock-header">
         <span className="dock-tab">Inspector</span>
         <button
