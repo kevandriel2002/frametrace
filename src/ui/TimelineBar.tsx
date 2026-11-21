@@ -21,7 +21,7 @@ export function TimelineBar() {
   
 
   return (
-    <div className="timeline">
+    <div className="timeline" data-tour="timeline">
       <button
         type="button"
         onClick={() => (rewinding ? pause() : rewind(stepCount))}

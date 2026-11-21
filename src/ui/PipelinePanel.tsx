@@ -58,7 +58,7 @@ export function PipelinePanel() {
         </div>
       </header>
 
-      <div className="row">
+      <div className="row" data-tour="add-buttons">
         {ADD_BUTTONS.map(({ kind, label }) => (
           <button key={kind} type="button" onClick={() => addBlock(kind)}>
             {label}
