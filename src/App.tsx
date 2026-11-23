@@ -15,6 +15,7 @@ import { hasSeenTutorial } from './tutorial/seen';
 import { TutorialOverlay } from './tutorial/TutorialOverlay';
 import { tutorialStore } from './tutorial/tutorialStore';
 import { HelpButton } from './ui/HelpButton';
+import { FrameBadge } from './ui/FrameBadge';
 
 function App() {
   useUndoShortcuts();
@@ -37,6 +38,7 @@ function App() {
       <PipelinePanel />
       <main className="app-viewport" data-tour="viewport">
         <ViewportCanvas />
+        <FrameBadge />
       </main>
       <TimelineBar />
       <BottomDock />

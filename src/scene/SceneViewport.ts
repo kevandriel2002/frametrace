@@ -8,6 +8,7 @@ import {
   Scene,
   WebGLRenderer,
   type Matrix4,
+  type Sprite,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
@@ -23,6 +24,9 @@ import { disposeObject } from './dispose';
 import { createLocalAxes } from './localAxes';
 import { createModel } from './models';
 import { createWorldAxes } from './worldAxes';
+import { referencePoint } from '../core/pipeline/pivot';
+import { setOpacity } from './overlay';
+import { createPivotMarker } from './pivotMarker';
 
 export type ViewportStores = {
   pipeline: StoreApi<PipelineState>;
@@ -42,6 +46,9 @@ export class SceneViewport {
   private readonly controls: OrbitControls;
   private readonly transformed: Group;
   private readonly resizeObserver: ResizeObserver;
+  private readonly worldAxes: Group;
+  private readonly localAxes: Group;
+  private readonly pivotMarker: Sprite;
   private readonly unsubscribe: () => void;
   private model: Group;
   private labels: Label[] = [];
@@ -77,17 +84,23 @@ export class SceneViewport {
     const grid = new GridHelper(20, 20, 0x3a3f4b, 0x262a33);
     grid.position.y = -0.001;
     this.scene.add(grid);
-    this.scene.add(createWorldAxes(6));
+    this.worldAxes = createWorldAxes(6);
+    this.scene.add(this.worldAxes);
 
     this.transformed = new Group();
     this.transformed.matrixAutoUpdate = false;
-    this.transformed.add(createLocalAxes(2.2));
+    this.localAxes = createLocalAxes(2.2);
+    this.transformed.add(this.localAxes)
     this.scene.add(this.transformed);
+    
+    this.pivotMarker = createPivotMarker();
+    this.scene.add(this.pivotMarker);
 
     const { model, display } = stores.view.getState();
     this.model = createModel(model, display);
     this.transformed.add(this.model);
     this.rebuildLabels();
+    this.updateFrameEmphasis();
     this.updateTransform();
 
     const stops = [
@@ -96,6 +109,7 @@ export class SceneViewport {
       }),
       stores.playback.subscribe((state, previous) => {
         if (state.playhead !== previous.playhead || state.mode !== previous.mode) this.updateTransform();
+        if (state.mode !== previous.mode) this.updateFrameEmphasis();
       }),
       stores.view.subscribe((state, previous) => {
         if (state.model !== previous.model || state.display !== previous.display) this.swapModel();
@@ -124,6 +138,7 @@ export class SceneViewport {
     const matrix = this.currentMatrix();
     this.transformed.matrix.copy(matrix);
     this.transformed.matrixWorldNeedsUpdate = true;
+    this.pivotMarker.position.set(...referencePoint(this.stores.playback.getState().mode, matrix));
     this.updateLabelText(matrix);
   }
 
@@ -183,6 +198,12 @@ export class SceneViewport {
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
     this.labelRenderer.render(this.scene, this.camera);
+  }
+
+  private updateFrameEmphasis(): void {
+    const world = this.stores.playback.getState().mode === 'world';
+    setOpacity(this.worldAxes, world ? 1 : 0.35);
+    setOpacity(this.localAxes, world ? 0.45 : 1);
   }
 
   dispose(): void {

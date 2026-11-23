@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { composePipeline } from '../pipeline/compose';
 import { rotate, scale, translate } from '../pipeline/operations';
-import { linearRank } from './rank';
+import { linearRank, isMirrored } from './rank';
 
 const rankOf = (...ops: Parameters<typeof composePipeline>[0]) => linearRank(composePipeline(ops));
 
@@ -26,5 +26,18 @@ describe('linearRank', () => {
     for (const op of later) {
       expect(rankOf(scale(1, 0, 1), op)).toBeLessThanOrEqual(2);
     }
+  });
+});
+
+describe('isMirrored', () => {
+  it('is true for an odd number of negative scale factors', () => {
+    expect(isMirrored(composePipeline([scale(1, -1, 1)]))).toBe(true);
+    expect(isMirrored(composePipeline([scale(-1, -1, -1)]))).toBe(true);
+  });
+
+  it('is false for rotations, an even number of flips, and a flattened object', () => {
+    expect(isMirrored(composePipeline([rotate('y', 180)]))).toBe(false);
+    expect(isMirrored(composePipeline([scale(-1, -1, 1)]))).toBe(false);
+    expect(isMirrored(composePipeline([scale(-1, 0, 1)]))).toBe(false);
   });
 });

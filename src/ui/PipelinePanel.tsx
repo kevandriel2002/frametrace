@@ -16,7 +16,6 @@ import { useStore } from 'zustand';
 import { pipelineStore, type OperationKind } from '../store/pipelineStore';
 import { BlockCard } from './BlockCard';
 import { playbackStore } from '../store/playbackStore';
-import { ReadingCard } from './ReadingCard';
 import { ModelPicker } from './ModelPicker';
 
 const ADD_BUTTONS: { kind: OperationKind; label: string }[] = [
@@ -73,7 +72,6 @@ export function PipelinePanel() {
         Drag ⠿ or use ↑ ↓ to reorder.
       </p>
 
-      <ReadingCard />
 
       {blocks.length === 0 ? (
         <p className="empty">No steps yet. The house is untransformed (identity).</p>

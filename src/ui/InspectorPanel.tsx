@@ -9,7 +9,8 @@ import { pipelineStore, toPipeline } from '../store/pipelineStore';
 import { playbackStore } from '../store/playbackStore';
 import { MatrixView } from './MatrixView';
 import { ZoneLegend } from './ZoneLegend';
-import { describeRank, linearRank } from '../core/math/rank';
+import { describeRank, linearRank, isMirrored } from '../core/math/rank';
+import { ReadingDetails } from './ReadingDetails';
 
 const KIND_TITLES = { translate: 'Translate', rotate: 'Rotate', scale: 'Scale' } as const;
 
@@ -23,6 +24,7 @@ export function InspectorPanel() {
   const t = effectivePlayhead(playhead, pipeline.length);
   const view = useMemo(() => inspectAt(pipeline, t, mode), [pipeline, t, mode]);
   const rank = linearRank(view.cumulative);
+  const mirrored = isMirrored(view.cumulative);
 
   const product = view.factors.length === 0 ? 'I' : view.factors.map(formatOperation).join(' · ');
   const exactRows =
@@ -45,9 +47,6 @@ export function InspectorPanel() {
               zoneOp={view.stepOp}
               text={exact ? exactRows : null}
             />
-            <p className={`rank-badge${rank < 3 ? ' is-collapsed' : ''}`}>
-              Rank {rank}: {describeRank(rank)}
-            </p>
             <label className="inspector-exact">
               <input
                 type="checkbox"
@@ -68,8 +67,13 @@ export function InspectorPanel() {
           Product so far · {mode === 'world' ? 'world axes' : 'local axes'}
         </p>
         <MatrixView caption={`M = ${product}`} matrix={view.cumulative} zoneOp={null} />
+        <p className={`rank-badge${rank < 3 ? ' is-collapsed' : ''}`}>
+          Rank {rank}: {describeRank(rank)}
+          {mirrored && ' · mirrored (determinant < 0)'}
+        </p>
+        <ReadingDetails />
       </div>
-
+      
       <ZoneLegend />
     </div>
   );

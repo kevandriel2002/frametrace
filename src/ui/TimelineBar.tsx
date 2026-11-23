@@ -4,6 +4,7 @@ import { effectivePlayhead } from '../core/pipeline/playhead';
 import { pipelineStore, toPipeline } from '../store/pipelineStore';
 import { SPEEDS, playbackStore } from '../store/playbackStore';
 import { invertPipeline } from '../core/pipeline/inverse';
+import { FrameToggle } from './FrameToggle';
 
 export function TimelineBar() {
   const stepCount = useStore(pipelineStore, (s) => s.blocks.length);
@@ -60,7 +61,7 @@ export function TimelineBar() {
       <button type="button" onClick={jumpToEnd} disabled={playhead === null}>
         End
       </button>
-
+      <FrameToggle />
       <label className="timeline-speed">
         Speed
         <select
