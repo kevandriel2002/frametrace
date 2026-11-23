@@ -473,6 +473,26 @@ input:focus-visible {
   color: var(--axis-z);
 }
 
+/* Pivot */
+.pivot-editor {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pivot-editor summary {
+  cursor: pointer;
+}
+
+.pivot-editor[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pivot-hint {
+  margin: 0;
+}
+
 .timeline {
   grid-area: timeline;
   display: flex;
