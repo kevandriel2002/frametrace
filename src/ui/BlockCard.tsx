@@ -9,6 +9,7 @@ import { Vec3Fields } from './Vec3Fields';
 import { useStore } from 'zustand';
 import { effectivePlayhead, blockProgress } from '../core/pipeline/playhead';
 import { playbackStore } from '../store/playbackStore';
+import { PivotEditor } from './PivotEditor';
 
 const TITLES: Record<Operation['kind'], string> = {
   translate: 'Translate',
@@ -121,40 +122,46 @@ function BlockEditor({ block }: { block: Block }) {
       );
     case 'scale':
       return (
-        <Vec3Fields
-          value={op.factors}
-          step={0.1}
-          onChange={(factors) => editBlock(id, { ...op, factors })}
-          onEditStart={beginEdit}
-          onEditEnd={endEdit}
-        />
-      );
-    case 'rotate':
-      return (
-        <div className="rotate-fields">
-          <select
-            aria-label="Rotation axis"
-            value={op.axis}
-            onChange={(event) => {
-              const axis = AXES.find((a) => a === event.target.value);
-              if (axis) replaceBlock(id, { ...op, axis });
-            }}
-          >
-            {AXES.map((axis) => (
-              <option key={axis} value={axis}>
-                {axis.toUpperCase()} axis
-              </option>
-            ))}
-          </select>
-          <NumberField
-            label="Angle °"
-            step={15}
-            value={op.angleDeg}
-            onChange={(angleDeg) => editBlock(id, { ...op, angleDeg })}
+        <>
+          <Vec3Fields
+            value={op.factors}
+            step={0.1}
+            onChange={(factors) => editBlock(id, { ...op, factors })}
             onEditStart={beginEdit}
             onEditEnd={endEdit}
           />
-        </div>
+          <PivotEditor id={id} op={op} />
+        </>
+      );
+    case 'rotate':
+      return (
+        <>
+          <div className="rotate-fields">
+            <select
+              aria-label="Rotation axis"
+              value={op.axis}
+              onChange={(event) => {
+                const axis = AXES.find((a) => a === event.target.value);
+                if (axis) replaceBlock(id, { ...op, axis });
+              }}
+            >
+              {AXES.map((axis) => (
+                <option key={axis} value={axis}>
+                  {axis.toUpperCase()} axis
+                </option>
+              ))}
+            </select>
+            <NumberField
+              label="Angle °"
+              step={15}
+              value={op.angleDeg}
+              onChange={(angleDeg) => editBlock(id, { ...op, angleDeg })}
+              onEditStart={beginEdit}
+              onEditEnd={endEdit}
+            />
+          </div>
+          <PivotEditor id={id} op={op} />
+        </>
       );
   }
 }

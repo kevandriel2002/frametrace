@@ -1,5 +1,6 @@
 // Names matrix cell given its position and step
 import type { Axis, Operation } from '../pipeline/types';
+import { isOrigin } from './points';
 
 export type Zone = 'rotation' | 'scale' | 'translation' | 'linear' | 'homogeneous' | 'none';
 
@@ -20,7 +21,10 @@ const ROTATION_PLANE: Record<Axis, readonly [number, number]> = {
 
 export function cellZone(row: number, col: number, op: Operation | null): Zone {
   if (row === 3) return 'homogeneous';
-  if (col === 3) return op === null || op.kind === 'translate' ? 'translation' : 'none';
+  if (col === 3) {
+    if (op === null || op.kind === 'translate') return 'translation';
+    return isOrigin(op.pivot) ? 'none' : 'translation';
+  }
   if (op === null) return 'linear';
 
   switch (op.kind) {

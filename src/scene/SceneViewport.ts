@@ -9,6 +9,7 @@ import {
   WebGLRenderer,
   type Matrix4,
   type Sprite,
+  type Line,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
@@ -24,9 +25,11 @@ import { disposeObject } from './dispose';
 import { createLocalAxes } from './localAxes';
 import { createModel } from './models';
 import { createWorldAxes } from './worldAxes';
-import { referencePoint } from '../core/pipeline/pivot';
+import { pivotAt } from '../core/pipeline/pivot';
 import { setOpacity } from './overlay';
 import { createPivotMarker } from './pivotMarker';
+import { createTether, updateTether } from './tether';
+import { MODEL_CENTRES } from '../core/models';
 
 export type ViewportStores = {
   pipeline: StoreApi<PipelineState>;
@@ -49,6 +52,7 @@ export class SceneViewport {
   private readonly worldAxes: Group;
   private readonly localAxes: Group;
   private readonly pivotMarker: Sprite;
+  private readonly tether: Line;
   private readonly unsubscribe: () => void;
   private model: Group;
   private labels: Label[] = [];
@@ -90,11 +94,14 @@ export class SceneViewport {
     this.transformed = new Group();
     this.transformed.matrixAutoUpdate = false;
     this.localAxes = createLocalAxes(2.2);
-    this.transformed.add(this.localAxes)
+    this.transformed.add(this.localAxes);
     this.scene.add(this.transformed);
     
     this.pivotMarker = createPivotMarker();
     this.scene.add(this.pivotMarker);
+
+    this.tether = createTether();
+    this.scene.add(this.tether);
 
     const { model, display } = stores.view.getState();
     this.model = createModel(model, display);
@@ -128,18 +135,24 @@ export class SceneViewport {
     this.renderer.setAnimationLoop(() => this.frame());
   }
 
-  private currentMatrix(): Matrix4 {
-    const pipeline = toPipeline(this.stores.pipeline.getState().blocks);
-    const { playhead, mode } = this.stores.playback.getState();
-    return composeAt(pipeline, effectivePlayhead(playhead, pipeline.length), mode);
-  }
 
   private updateTransform(): void {
-    const matrix = this.currentMatrix();
+    const pipeline = toPipeline(this.stores.pipeline.getState().blocks);
+    const { playhead, mode } = this.stores.playback.getState();
+    const t = effectivePlayhead(playhead, pipeline.length);
+    const matrix = composeAt(pipeline, t, mode);
+
     this.transformed.matrix.copy(matrix);
     this.transformed.matrixWorldNeedsUpdate = true;
-    this.pivotMarker.position.set(...referencePoint(this.stores.playback.getState().mode, matrix));
     this.updateLabelText(matrix);
+
+    const pivot = pivotAt(pipeline, t, mode);
+    this.pivotMarker.position.set(...pivot.world);
+
+    const [centre] = transformPoints(matrix, [MODEL_CENTRES[this.stores.view.getState().model]]);
+    const target = centre ?? pivot.world;
+    const length = Math.hypot(...target.map((v, i) => v - (pivot.world[i] ?? 0)));
+    updateTether(this.tether, pivot.world, target, pivot.kind !== 'translate' && pivot.kind !== null && length > 1e-6);
   }
 
   private swapModel(): void {

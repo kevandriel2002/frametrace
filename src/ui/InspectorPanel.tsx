@@ -11,6 +11,7 @@ import { MatrixView } from './MatrixView';
 import { ZoneLegend } from './ZoneLegend';
 import { describeRank, linearRank, isMirrored } from '../core/math/rank';
 import { ReadingDetails } from './ReadingDetails';
+import { isOrigin } from '../core/math/points';
 
 const KIND_TITLES = { translate: 'Translate', rotate: 'Rotate', scale: 'Scale' } as const;
 
@@ -28,7 +29,7 @@ export function InspectorPanel() {
 
   const product = view.factors.length === 0 ? 'I' : view.factors.map(formatOperation).join(' · ');
   const exactRows =
-    view.stepOp?.kind === 'rotate' && view.progress === 1
+    view.stepOp?.kind === 'rotate' && view.progress === 1 && isOrigin(view.stepOp.pivot)
       ? exactRotationRows(view.stepOp.axis, view.stepOp.angleDeg)
       : null;
 

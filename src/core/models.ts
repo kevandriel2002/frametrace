@@ -42,3 +42,10 @@ export const HIGHLIGHTED_VERTEX: Record<ModelKind, number | null> = {
   segment: 1,
   plane: 2,
 };
+
+export const MODEL_CENTRES: Record<ModelKind, Vec3> = {
+  house: [0, 1, 0],
+  cube: [0.5, 0.5, 0.5],
+  segment: [1, 0.5, 0],
+  plane: [0.5, 0.5, 0],
+};

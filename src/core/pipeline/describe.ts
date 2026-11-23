@@ -1,9 +1,12 @@
 // Turns Pipeline into readable math text
 import type { FrameMode } from './playhead';
-import type { Operation, Pipeline } from './types';
+import type { Operation, Pipeline, Vec3 } from './types';
 import { formatNumber } from '../math/format';
+import { formatPoint } from '../math/format';
+import { isOrigin } from '../math/points';
 
 const num = (value: number): string => formatNumber(value);
+const about = (pivot: Vec3): string => (isOrigin(pivot) ? '' : `, about ${formatPoint(pivot)}`);
 
 
 // Gives short labels (ex: T(3, 0, 0))
@@ -12,9 +15,9 @@ export function formatOperation(op: Operation): string {
     case 'translate':
       return `T(${op.offset.map(num).join(', ')})`;
     case 'rotate':
-      return `R${op.axis}(${num(op.angleDeg)}°)`;
+      return `R${op.axis}(${num(op.angleDeg)}°${about(op.pivot)})`;
     case 'scale':
-      return `S(${op.factors.map(num).join(', ')})`;
+      return `S(${op.factors.map(num).join(', ')}${about(op.pivot)})`;
   }
 }
 

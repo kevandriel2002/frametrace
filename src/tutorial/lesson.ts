@@ -1,4 +1,5 @@
 import type { Snapshot } from './snapshot';
+import { samePoint } from '../core/math/points';
 
 export type TutorialStep = {
   id: string;
@@ -92,6 +93,14 @@ export const LESSON: readonly TutorialStep[] = [
     title: 'Follow a corner',
     body: 'Switch the object to Cube. Its labelled corner shows coordinates that change as the steps play.',
     done: ({ model }) => model === 'cube',
+  },
+  {
+    id: 'pivot',
+    target: 'pipeline',
+    title: 'Turn it in place',
+    body: 'On the Rotate step, open “About” and choose Object centre, then press Play. The cube now turns around its own centre instead of swinging around a corner. The yellow ring shows the point it turns about.',
+    done: ({ pipeline }) =>
+      pipeline.some((op) => op.kind === 'rotate' && samePoint(op.pivot, [0.5, 0.5, 0.5])),
   },
   {
     id: 'finish',

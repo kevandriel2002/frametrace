@@ -66,6 +66,9 @@ describe('tutorial', () => {
     expect(currentId()).toBe('cube');
 
     viewStore.getState().setModel('cube');
+    expect(currentId()).toBe('pivot');
+
+    pipelineStore.getState().setPipeline([rotate('y', 90, [0.5, 0.5, 0.5]), translate(3, 0, 0)]);
     expect(currentId()).toBe('finish');
 
     tour().next();

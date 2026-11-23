@@ -1,5 +1,5 @@
 import { Matrix4 } from 'three';
-import { opToMatrix, rotate, scale, translate } from './operations';
+import { opToMatrix, translate } from './operations';
 import type { Operation, Pipeline } from './types';
 
 const clamp01 = (x: number): number => Math.min(1, Math.max(0, x));
@@ -17,10 +17,10 @@ export function partialOperation(op: Operation, fraction: number): Operation {
       return translate(x * f, y * f, z * f);
     }
     case 'rotate':
-      return rotate(op.axis, op.angleDeg * f);
+      return { ...op, angleDeg: op.angleDeg * f };
     case 'scale': {
       const [x, y, z] = op.factors;
-      return scale(lerp(1, x, f), lerp(1, y, f), lerp(1, z, f));
+      return { ...op, factors: [lerp(1, x, f), lerp(1, y, f), lerp(1, z, f)] };
     }
   }
 }
