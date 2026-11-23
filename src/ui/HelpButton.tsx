@@ -16,7 +16,7 @@ export function HelpButton() {
           <dt>Pipeline</dt>
           <dd>Add translate, rotate and scale steps. Drag ⠿ or use ↑ ↓ to change their order.</dd>
           <dt>Reading</dt>
-          <dd>World axes run the steps top to bottom; local axes run them bottom to top. Both end in the same place.</dd>
+          <dd>World / Local in the timeline bar. World runs the steps top to bottom about the world axes; Local runs them bottom to top about the object’s own axes. Both end in the same place.</dd>
           <dt>Timeline</dt>
           <dd>Play, scrub or rewind through the steps. Rewind replays backwards; it does not change your pipeline.</dd>
           <dt>Inspector</dt>

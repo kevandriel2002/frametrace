@@ -12,9 +12,11 @@ export function ZoneLegend() {
   return (
     <ul className="zone-legend" aria-label="Matrix zones">
       {ITEMS.map(({ zone, text }) => (
-        <li key={zone}>
+          <li key={zone}>
           <span className={`zone-swatch zone-${zone}`} aria-hidden="true" />
-          <strong>{ZONE_LABELS[zone]}:</strong> {text}
+          <span>
+            <strong>{ZONE_LABELS[zone]}:</strong> {text}
+          </span>
         </li>
       ))}
     </ul>

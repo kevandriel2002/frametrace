@@ -20,7 +20,7 @@ export const LESSON: readonly TutorialStep[] = [
     id: 'scene',
     target: 'viewport',
     title: 'The scene',
-    body: 'The coloured lines are the world axes; their dashed halves point the negative way. The x′ y′ z′ arrows belong to the object and move with it. Drag to orbit, scroll to zoom, right-drag to pan.',
+    body: 'The coloured lines are the world axes; their dashed halves point the negative way. The x′ y′ z′ arrows belong to the object and move with it. Drag to orbit, scroll to zoom, right-drag to pan. The yellow ring marks the point each step is measured from.',
   },
   {
     id: 'clear',
@@ -66,11 +66,11 @@ export const LESSON: readonly TutorialStep[] = [
     body: 'Press Play, or drag the slider. The step being applied is highlighted in the list, and later steps are dimmed.',
     done: ({ playhead }) => playhead !== null,
   },
-  {
+   {
     id: 'local',
-    target: 'reading-card',
+    target: 'frame-toggle',
     title: 'Two ways to read it',
-    body: 'Choose Local axes, then press Play again. The steps now run bottom to top, each about the object’s own axes. The path changes; the final position does not.',
+    body: 'Switch to Local in the timeline bar, then press Play again. The steps now run bottom to top, each about the object’s own axes. The path changes; the final position does not. “How to read this product” in the inspector shows both orders side by side.',
     done: ({ mode }) => mode === 'local',
   },
   {

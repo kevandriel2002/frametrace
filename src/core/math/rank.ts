@@ -1,5 +1,9 @@
 import type { Matrix4 } from 'three';
-import { cell } from './matrix';
+import { cell, EPSILON } from './matrix';
+
+export function isMirrored(m: Matrix4): boolean {
+  return m.determinant() < -EPSILON;
+}
 
 // Counts how many independent directions the transformation keeps [3, 2, 2, 0]
 // Works using Gaussian Elimination
