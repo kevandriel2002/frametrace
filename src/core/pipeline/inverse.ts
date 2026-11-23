@@ -1,6 +1,6 @@
 import type { Matrix4 } from 'three';
 import { EPSILON } from '../math/matrix';
-import { rotate, scale, translate } from './operations';
+import { translate } from './operations';
 import type { Operation, Pipeline } from './types';
 
 export type InverseResult =
@@ -22,11 +22,11 @@ export function invertOp(op: Operation): Operation | null {
       return translate(-x, -y, -z);
     }
     case 'rotate':
-      return rotate(op.axis, -op.angleDeg);
+      return { ...op, angleDeg: -op.angleDeg };
     case 'scale': {
       const [x, y, z] = op.factors;
       if ([x, y, z].some((f) => Math.abs(f) < EPSILON)) return null;
-      return scale(1 / x, 1 / y, 1 / z);
+      return { ...op, factors: [1 / x, 1 / y, 1 / z] };
     }
   }
 }

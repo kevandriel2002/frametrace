@@ -7,16 +7,25 @@ export const translate = (x: number, y: number, z: number): TranslateOp => ({
   offset: [x, y, z],
 });
 
-export const rotate = (axis: Axis, angleDeg: number): RotateOp => ({
+const ORIGIN: Vec3 = [0, 0, 0];
+
+export const rotate = (axis: Axis, angleDeg: number, pivot: Vec3 = ORIGIN): RotateOp => ({
   kind: 'rotate',
   axis,
   angleDeg,
+  pivot,
 });
 
-export const scale = (x: number, y: number, z: number): ScaleOp => ({
+export const scale = (x: number, y: number, z: number, pivot: Vec3 = ORIGIN): ScaleOp => ({
   kind: 'scale',
   factors: [x, y, z],
+  pivot,
 });
+
+export function aboutPivot(m: Matrix4, [px, py, pz]: Vec3): Matrix4 {
+  if (px === 0 && py === 0 && pz === 0) return m;
+  return translationMatrix([px, py, pz]).multiply(m).multiply(translationMatrix([-px, -py, -pz]));
+}
 
 export function translationMatrix([tx, ty, tz]: Vec3): Matrix4 {
   // prettier-ignore
@@ -72,8 +81,8 @@ export function opToMatrix(op: Operation): Matrix4 {
     case 'translate':
       return translationMatrix(op.offset);
     case 'rotate':
-      return rotationMatrix(op.axis, op.angleDeg);
+      return aboutPivot(rotationMatrix(op.axis, op.angleDeg), op.pivot);
     case 'scale':
-      return scaleMatrix(op.factors);
+      return aboutPivot(scaleMatrix(op.factors), op.pivot);
   }
 }

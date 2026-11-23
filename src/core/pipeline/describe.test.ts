@@ -15,6 +15,12 @@ describe('formatOperation', () => {
     expect(formatOperation(translate(1e-12, -0, 2))).toBe('T(0, 0, 2)');
     expect(formatOperation(scale(1 / 1.5, 1, 1))).toBe('S(0.667, 1, 1)');
   });
+
+  it('writes a pivot only when it is not the origin', () => {
+    expect(formatOperation(rotate('y', 45, [0.5, 0.5, 0.5]))).toBe('Ry(45°, about (0.5, 0.5, 0.5))');
+    expect(formatOperation(scale(2, 2, 2, [1, 1, 1]))).toBe('S(2, 2, 2, about (1, 1, 1))');
+    expect(formatOperation(rotate('y', 45, [0, 0, 0]))).toBe('Ry(45°)');
+  });
 });
 
 describe('productExpression', () => {

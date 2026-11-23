@@ -11,6 +11,8 @@ const sampleOps = [
   rotate('y', 37),
   rotate('z', 37),
   scale(2, -1, 0.5),
+  rotate('x', 37, [1, 2, 3]),
+  scale(2, -1, 0.5, [1, 1, 1]),
 ];
 
 function zonedCells(op: Parameters<typeof cellZone>[2], zone: string): string[] {
@@ -54,5 +56,10 @@ describe('cellZone', () => {
         }
       }
     }
+  });
+
+  it('marks the fourth column as translation for a step about another point', () => {
+    expect(zonedCells(rotate('z', 90, [1, 0, 0]), 'translation')).toEqual(['0,3', '1,3', '2,3']);
+    expect(zonedCells(scale(2, 2, 2, [1, 1, 1]), 'translation')).toEqual(['0,3', '1,3', '2,3']);
   });
 });

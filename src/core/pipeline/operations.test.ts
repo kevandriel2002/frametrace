@@ -64,3 +64,25 @@ describe('rotate: matrix properties', () => {
     expect(matricesEqual(rotationMatrix('z', 37), new Matrix4().makeRotationZ(t))).toBe(true);
   });
 });
+
+describe('pivots', () => {
+  it('leaves the pivot itself where it is', () => {
+    expectPoint(transformPoint(opToMatrix(rotate('z', 90, [1, 0, 0])), 1, 0, 0), 1, 0, 0);
+    expectPoint(transformPoint(opToMatrix(scale(2, 2, 2, [1, 1, 1])), 1, 1, 1), 1, 1, 1);
+  });
+
+  it('turns and scales other points relative to the pivot', () => {
+    expectPoint(transformPoint(opToMatrix(rotate('z', 90, [1, 0, 0])), 2, 0, 0), 1, 1, 0);
+    expectPoint(transformPoint(opToMatrix(scale(2, 2, 2, [1, 1, 1])), 2, 1, 1), 3, 1, 1);
+  });
+
+  it('is a rotation plus a translation of p − R·p', () => {
+    const rows = toRows(opToMatrix(rotate('z', 90, [1, 0, 0])));
+    const column = rows.map((row) => row[3] ?? NaN);
+    [1, -1, 0, 1].forEach((expected, i) => expect(column[i]).toBeCloseTo(expected, 9));
+  });
+
+  it('changes nothing for a pivot at the origin', () => {
+    expect(matricesEqual(opToMatrix(rotate('x', 37, [0, 0, 0])), rotationMatrix('x', 37))).toBe(true);
+  });
+});

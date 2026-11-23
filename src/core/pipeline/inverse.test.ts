@@ -42,4 +42,12 @@ describe('invertPipeline', () => {
   it('returns null when a step cannot be undone', () => {
     expect(invertPipeline([translate(1, 0, 0), scale(0, 1, 1)])).toBeNull();
   });
+
+  it('undoes pivoted steps about the same pivot', () => {
+    const pivoted = [rotate('z', 90, [1, 0, 0]), scale(2, 0.5, 3, [1, 1, 1]), translate(0, 2, 0)];
+    const inverse = invertPipeline(pivoted);
+    if (!inverse) throw new Error('expected an invertible pipeline');
+    expect(isIdentity(composePipeline([...pivoted, ...inverse]))).toBe(true);
+  });
 });
+

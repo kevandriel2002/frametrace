@@ -11,11 +11,13 @@ export type RotateOp = {
   readonly kind: 'rotate';
   readonly axis: Axis;
   readonly angleDeg: number;
+  readonly pivot: Vec3;
 };
 
 export type ScaleOp = {
   readonly kind: 'scale';
   readonly factors: Vec3;
+  readonly pivot: Vec3;
 };
 
 export type Operation = TranslateOp | RotateOp | ScaleOp;
