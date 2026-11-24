@@ -17,6 +17,7 @@ import { tutorialStore } from './tutorial/tutorialStore';
 import { HelpButton } from './ui/HelpButton';
 import { FrameBadge } from './ui/FrameBadge';
 import { TutorialButton } from './tutorial/TutorialButton';
+import { ViewButtons } from './ui/ViewButtons';
 
 function App() {
   useUndoShortcuts();
@@ -38,6 +39,7 @@ function App() {
       <main className="app-viewport" data-tour="viewport">
         <ViewportCanvas />
         <FrameBadge />
+        <ViewButtons />
       </main>
       <TimelineBar />
       <BottomDock />

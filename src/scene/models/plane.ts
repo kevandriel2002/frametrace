@@ -9,9 +9,7 @@ import {
   MeshStandardMaterial,
   PlaneGeometry,
 } from 'three';
-import { MODEL_VERTICES } from '../../core/models';
 import type { DisplayMode } from '../../store/viewStore';
-import { vertexMarkers } from './parts';
 
 export function createPlane(display: DisplayMode): Group {
   const plane = new Group();
@@ -29,6 +27,5 @@ export function createPlane(display: DisplayMode): Group {
   }
 
   plane.add(new LineSegments(edges, new LineBasicMaterial({ color: '#e6e8ec' })));
-  plane.add(vertexMarkers(MODEL_VERTICES.plane, '#f5f5f5'));
   return plane;
 }
