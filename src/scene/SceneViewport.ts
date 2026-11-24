@@ -6,38 +6,35 @@ import {
   Group,
   PerspectiveCamera,
   Scene,
+  Vector3,
   WebGLRenderer,
-  type Matrix4,
-  type Sprite,
   type Line,
+  type Sprite,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import type { StoreApi } from 'zustand/vanilla';
-import { formatPoint } from '../core/math/format';
 import { transformPoints } from '../core/math/points';
-import { HIGHLIGHTED_VERTEX, MODEL_VERTICES } from '../core/models';
+import { MODEL_CENTRES } from '../core/models';
+import { pivotAt } from '../core/pipeline/pivot';
 import { composeAt, effectivePlayhead } from '../core/pipeline/playhead';
 import { toPipeline, type PipelineState } from '../store/pipelineStore';
 import type { PlaybackState } from '../store/playbackStore';
-import type { ViewState } from '../store/viewStore';
+import type { CameraView, ViewState } from '../store/viewStore';
 import { disposeObject } from './dispose';
-import { createLocalAxes } from './localAxes';
+import { createLocalAxes, type LocalAxes } from './localAxes';
 import { createModel } from './models';
-import { createWorldAxes } from './worldAxes';
-import { pivotAt } from '../core/pipeline/pivot';
 import { setOpacity } from './overlay';
 import { createPivotMarker } from './pivotMarker';
 import { createTether, updateTether } from './tether';
-import { MODEL_CENTRES } from '../core/models';
+import { createVertexOverlay, type VertexOverlay } from './vertexOverlay';
+import { createWorldAxes } from './worldAxes';
 
 export type ViewportStores = {
   pipeline: StoreApi<PipelineState>;
   playback: StoreApi<PlaybackState>;
   view: StoreApi<ViewState>;
 };
-
-type Label = { object: CSS2DObject; vertexIndex: number };
 
 export class SceneViewport {
   private readonly container: HTMLElement;
@@ -50,12 +47,12 @@ export class SceneViewport {
   private readonly transformed: Group;
   private readonly resizeObserver: ResizeObserver;
   private readonly worldAxes: Group;
-  private readonly localAxes: Group;
+  private readonly localAxes: LocalAxes;
   private readonly pivotMarker: Sprite;
   private readonly tether: Line;
   private readonly unsubscribe: () => void;
   private model: Group;
-  private labels: Label[] = [];
+  private vertexOverlay: VertexOverlay;
 
   constructor(container: HTMLElement, stores: ViewportStores) {
     this.container = container;
@@ -79,6 +76,7 @@ export class SceneViewport {
     this.controls.enableDamping = true;
     this.controls.target.set(0, 0.5, 0);
     this.controls.update();
+    this.controls.saveState();
 
     this.scene.add(new AmbientLight(0xffffff, 0.6));
     const sun = new DirectionalLight(0xffffff, 1.5);
@@ -93,20 +91,23 @@ export class SceneViewport {
 
     this.transformed = new Group();
     this.transformed.matrixAutoUpdate = false;
-    this.localAxes = createLocalAxes(2.2);
-    this.transformed.add(this.localAxes);
     this.scene.add(this.transformed);
-    
+
+    this.localAxes = createLocalAxes(2.2);
+    this.scene.add(this.localAxes.group);
+
     this.pivotMarker = createPivotMarker();
     this.scene.add(this.pivotMarker);
 
     this.tether = createTether();
     this.scene.add(this.tether);
 
-    const { model, display } = stores.view.getState();
+    const { model, display, labels } = stores.view.getState();
     this.model = createModel(model, display);
     this.transformed.add(this.model);
-    this.rebuildLabels();
+    this.vertexOverlay = createVertexOverlay(model, labels);
+    this.scene.add(this.vertexOverlay.group);
+
     this.updateFrameEmphasis();
     this.updateTransform();
 
@@ -121,8 +122,11 @@ export class SceneViewport {
       stores.view.subscribe((state, previous) => {
         if (state.model !== previous.model || state.display !== previous.display) this.swapModel();
         if (state.model !== previous.model || state.labels !== previous.labels) {
-          this.rebuildLabels();
+          this.rebuildVertexOverlay();
           this.updateTransform();
+        }
+        if (state.cameraRequest && state.cameraRequest !== previous.cameraRequest) {
+          this.applyCamera(state.cameraRequest.view);
         }
       }),
     ];
@@ -135,7 +139,6 @@ export class SceneViewport {
     this.renderer.setAnimationLoop(() => this.frame());
   }
 
-
   private updateTransform(): void {
     const pipeline = toPipeline(this.stores.pipeline.getState().blocks);
     const { playhead, mode } = this.stores.playback.getState();
@@ -144,7 +147,8 @@ export class SceneViewport {
 
     this.transformed.matrix.copy(matrix);
     this.transformed.matrixWorldNeedsUpdate = true;
-    this.updateLabelText(matrix);
+    this.localAxes.update(matrix);
+    this.vertexOverlay.update(matrix);
 
     const pivot = pivotAt(pipeline, t, mode);
     this.pivotMarker.position.set(...pivot.world);
@@ -163,39 +167,28 @@ export class SceneViewport {
     this.transformed.add(this.model);
   }
 
-  private rebuildLabels(): void {
-    for (const { object } of this.labels) this.transformed.remove(object);
-
+  private rebuildVertexOverlay(): void {
+    this.vertexOverlay.dispose();
     const { model, labels } = this.stores.view.getState();
-    const vertices = MODEL_VERTICES[model];
-    const highlighted = HIGHLIGHTED_VERTEX[model];
-    const indices =
-      labels === 'all'
-        ? vertices.map((_, i) => i)
-        : labels === 'one' && highlighted !== null
-          ? [highlighted]
-          : [];
-
-    this.labels = indices.flatMap((vertexIndex) => {
-      const vertex = vertices[vertexIndex];
-      if (!vertex) return [];
-      const element = document.createElement('div');
-      element.className = 'vertex-label';
-      const object = new CSS2DObject(element);
-      object.position.set(...vertex);
-      object.center.set(-0.1, 1.1);
-      this.transformed.add(object);
-      return [{ object, vertexIndex }];
-    });
+    this.vertexOverlay = createVertexOverlay(model, labels);
+    this.scene.add(this.vertexOverlay.group);
   }
 
-  private updateLabelText(matrix: Matrix4): void {
-    const { model } = this.stores.view.getState();
-    const moved = transformPoints(matrix, MODEL_VERTICES[model]);
-    for (const { object, vertexIndex } of this.labels) {
-      const point = moved[vertexIndex];
-      if (point) object.element.textContent = formatPoint(point);
+  private applyCamera(view: CameraView): void {
+    if (view === 'reset') {
+      this.controls.reset();
+      return;
     }
+    const target = this.controls.target;
+    const distance = this.camera.position.distanceTo(target);
+    const direction =
+      view === 'front'
+        ? new Vector3(0, 0, 1)
+        : view === 'right'
+          ? new Vector3(1, 0, 0)
+          : new Vector3(0, 1, 0.0001).normalize();
+    this.camera.position.copy(target).addScaledVector(direction, distance);
+    this.controls.update();
   }
 
   private resize(): void {
@@ -216,7 +209,7 @@ export class SceneViewport {
   private updateFrameEmphasis(): void {
     const world = this.stores.playback.getState().mode === 'world';
     setOpacity(this.worldAxes, world ? 1 : 0.35);
-    setOpacity(this.localAxes, world ? 0.45 : 1);
+    setOpacity(this.localAxes.group, world ? 0.45 : 1);
   }
 
   dispose(): void {

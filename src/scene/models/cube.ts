@@ -1,7 +1,6 @@
 import { BoxGeometry, EdgesGeometry, Group, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial } from 'three';
-import { MODEL_VERTICES } from '../../core/models';
 import type { DisplayMode } from '../../store/viewStore';
-import { EDGE_COLOR, vertexMarkers } from './parts';
+import { EDGE_COLOR} from './parts';
 
 const FACE_COLORS = ['#d55e00', '#7a3a14', '#009e73', '#0d4f3d', '#56b4e9', '#2a5f80'];
 
@@ -22,6 +21,5 @@ export function createCube(display: DisplayMode): Group {
     cube.add(new LineSegments(edges, new LineBasicMaterial({ color: '#e6e8ec' })));
   }
 
-  cube.add(vertexMarkers(MODEL_VERTICES.cube, '#f5f5f5'));
   return cube;
 }

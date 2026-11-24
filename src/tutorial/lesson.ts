@@ -1,5 +1,6 @@
 import type { Snapshot } from './snapshot';
 import { samePoint } from '../core/math/points';
+import { playbackStore } from '../store/playbackStore';
 
 export type TutorialStep = {
   id: string;
@@ -7,6 +8,7 @@ export type TutorialStep = {
   body: string;
   target?: string;
   done?: (now: Snapshot) => boolean;
+  enter?: () => void;
 };
 
 const near = (a: number, b: number): boolean => Math.abs(a - b) < 1e-6;
@@ -21,7 +23,7 @@ export const LESSON: readonly TutorialStep[] = [
     id: 'scene',
     target: 'viewport',
     title: 'The scene',
-    body: 'The coloured lines are the world axes; their dashed halves point the negative way. The x′ y′ z′ arrows belong to the object and move with it. Drag to orbit, scroll to zoom, right-drag to pan. The yellow ring marks the point each step is measured from.',
+    body: 'The coloured lines are the world axes; their dashed halves point the negative way. The x′ y′ z′ arrows belong to the object and move with it. Drag to orbit, scroll to zoom, right-drag to pan. The yellow ring marks the point each step is measured from. Lost? Reset, in the top-right corner, brings the camera back.',
   },
   {
     id: 'clear',
@@ -67,12 +69,18 @@ export const LESSON: readonly TutorialStep[] = [
     body: 'Press Play, or drag the slider. The step being applied is highlighted in the list, and later steps are dimmed.',
     done: ({ playhead }) => playhead !== null,
   },
-   {
+  {
+    id: 'frames',
+    target: 'frame-toggle',
+    title: 'Why two readings?',
+    body: 'World is like directions by compass: “go 3 km east, then face north”. North never moves. Local is like directions to a walker: “walk 3 steps forward, then turn left”. Each instruction depends on where they face now.',
+  },
+  {
     id: 'local',
     target: 'frame-toggle',
-    title: 'Two ways to read it',
-    body: 'Switch to Local in the timeline bar, then press Play again. The steps now run bottom to top, each about the object’s own axes. The path changes; the final position does not. “How to read this product” in the inspector shows both orders side by side.',
-    done: ({ mode }) => mode === 'local',
+    title: 'Try the local reading',
+    body: 'Predict first: in Local, which step runs first? Then switch to Local here and press Play. The path changes; the end position does not.',
+    done: ({ mode, playing }) => mode === 'local' && playing,
   },
   {
     id: 'rewind',
@@ -85,7 +93,8 @@ export const LESSON: readonly TutorialStep[] = [
     id: 'inspector',
     target: 'inspector',
     title: 'The numbers behind it',
-    body: 'Press End, then look at the product in the inspector. The fourth column holds the translation. Can you find the 3?',
+    body: 'The inspector shows the numbers. In the product, the fourth column holds the translation. Can you find the 3?',
+    enter: () => playbackStore.getState().jumpToEnd(),
   },
   {
     id: 'cube',

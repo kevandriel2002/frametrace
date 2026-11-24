@@ -6,12 +6,28 @@ import { LESSON } from './lesson';
 import { takeSnapshot } from './snapshot';
 import { tutorialStore } from './tutorialStore';
 
+export const SETTLE_MS = 1200;
+
 export function startTutorialController(): () => void {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
   const check = () => {
-    const { active, stepIndex, next } = tutorialStore.getState();
-    if (!active) return;
-    const step = LESSON.at(stepIndex);
-    if (step?.done?.(takeSnapshot())) next();
+    clearTimeout(timer);
+    const state = tutorialStore.getState();
+    if (!state.active || state.minimised) return;
+
+    const now = takeSnapshot();
+    if (!state.completed) {
+      if (LESSON.at(state.stepIndex)?.done?.(now)) state.markCompleted();
+      return;
+    }
+
+    if (!state.autoAdvance || now.playing) return;
+    const index = state.stepIndex;
+    timer = setTimeout(() => {
+      const latest = tutorialStore.getState();
+      if (latest.active && !latest.minimised && latest.completed && latest.stepIndex === index) latest.next();
+    }, SETTLE_MS);
   };
 
   const stops = [
@@ -20,5 +36,8 @@ export function startTutorialController(): () => void {
     viewStore.subscribe(check),
     tutorialStore.subscribe(check),
   ];
-  return () => stops.forEach((stop) => stop());
+  return () => {
+    clearTimeout(timer);
+    stops.forEach((stop) => stop());
+  };
 }

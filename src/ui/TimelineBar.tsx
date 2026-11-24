@@ -58,9 +58,14 @@ export function TimelineBar() {
         {t.toFixed(2)} / {stepCount}
       </span>
 
-      <button type="button" onClick={jumpToEnd} disabled={playhead === null}>
-        End
-      </button>
+      <span
+        className="tooltip-wrap"
+        title={playhead === null ? 'Already showing the full result' : 'Jump to the full result'}
+      >
+        <button type="button" onClick={jumpToEnd} disabled={playhead === null}>
+          End
+        </button>
+      </span>
       <FrameToggle />
       <label className="timeline-speed">
         Speed
