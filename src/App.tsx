@@ -16,6 +16,7 @@ import { TutorialOverlay } from './tutorial/TutorialOverlay';
 import { tutorialStore } from './tutorial/tutorialStore';
 import { HelpButton } from './ui/HelpButton';
 import { FrameBadge } from './ui/FrameBadge';
+import { TutorialButton } from './tutorial/TutorialButton';
 
 function App() {
   useUndoShortcuts();
@@ -28,9 +29,7 @@ function App() {
   return (
     <div className="app">
       <header className='app-header'>
-        <button type="button" onClick={() => tutorialStore.getState().start()}>
-          Tutorial
-        </button>
+        <TutorialButton />
         <HelpButton />
         <img src={logo} alt='' className='app-logo' />
         <span className='app-title'>FrameTrace</span>

@@ -17,6 +17,11 @@ export function ReadingDetails() {
   return (
     <details className="reading-details" data-tour="reading-details">
       <summary>How to read this product</summary>
+      <p className="reading-analogy">
+        World is like compass directions (“go east, then face north”): the axes never move. Local is like
+        directions to a walker (“walk forward, then turn left”): each step depends on where the object faces
+        now. In Blender, these are the Global and Local orientations.
+      </p>
       <dl>
         <dt>World axes (fixed frame)</dt>
         <dd>
